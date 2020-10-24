@@ -83,6 +83,7 @@ app.post('/play',jsonParser, (req, res) => {
         players.splice(players.indexOf(answer.id), 1);
         ejected_players.push(answer.id);
     }
+    current_index++;
     sessions.push(session);
     res.status(200).send(session);
 
