@@ -34,12 +34,7 @@ let current_index = 0;
  */
 app.get('/join', (_, res) => {
 
-    let user_id = null;
-    if (last_added_user != null) {
-        user_id = 0;
-    } else {
-        user_id = last_added_user++;
-    }
+    let user_id = last_added_user++;
 
     players.push(user_id);
     last_added_user = user_id;
