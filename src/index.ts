@@ -35,6 +35,11 @@ app.get('/join', (_, res) => {
     const user_id = players.length > 0 ? players[players.length - 1] + 1 : 0;
     players.push(user_id);
 
+    const session = new GameSession();
+    session.username = user_id;
+    session.state = "joined";
+    sessions.push(session);
+
     res.status(200).send({
         id: user_id,
         sessions
