@@ -40,40 +40,43 @@ app.get('/join', (_, res) => {
     session.state = "joined";
     sessions.push(session);
 
-    res.status(200).send({
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).send(JSON.stringify({
         id: user_id,
         sessions
-    })
+    }))
 });
 
 app.get('/sessions', (_, res) => {
-    res.status(200).send(sessions)
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).send(JSON.stringify(sessions))
 });
 
 
 app.post('/play',jsonParser, (req, res) => {
     const answer: Answer = req.body, fizz: boolean = current_index % 3 == 0, buzz: boolean = current_index % 5 == 0;
 
+    res.setHeader('Content-Type', 'application/json');
     // If user was ejected
     if (ejected_players.includes(answer.id)) {
-        res.status(400).send({
+        res.status(400).send(JSON.stringify({
             message: "Already Ejected"
-        });
+        }));
         return;
     }
     // If less than 2 players
     if (players.length <= 1) {
-        res.status(400).send({
+        res.status(400).send(JSON.stringify({
             message: "Wait for more players to join"
-        });
+        }));
         return;
     }
 
     // If it's not your turn to play
     if (next_player != null && next_player !== answer.id) {
-        res.status(400).send({
+        res.status(400).send(JSON.stringify({
             message: "Not your turn"
-        });
+        }));
         return;
     }
 
@@ -90,7 +93,7 @@ app.post('/play',jsonParser, (req, res) => {
     }
     current_index++;
     sessions.push(session);
-    res.status(200).send(session);
+    res.status(200).send(JSON.stringify(session));
 
     if (players.length >= 2) {
         // Get next player for 4 second rule
