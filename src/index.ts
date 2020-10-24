@@ -4,7 +4,7 @@ import bodyParser from "body-parser";
 const app = express();
 const jsonParser = bodyParser.json();
 
-const port = process.env.PORT ||5000;
+const port = process.env.PORT || 5000;
 
 type Answer = {
     guess: string,
@@ -19,7 +19,8 @@ class GameSession {
 // Players
 const players: Array<number> = [];
 const ejected_players: Array<number> = [];
-let next_player:number = null;
+let next_player: number = null;
+let last_added_user: number = null;
 
 // Game sessions
 const sessions: Array<GameSession> = [];
@@ -32,7 +33,14 @@ let current_index = 0;
  * New user gets id
  */
 app.get('/join', (_, res) => {
-    const user_id = players.length > 0 ? players[players.length - 1] + 1 : 0;
+
+    let user_id = null;
+    if (last_added_user == null) {
+        user_id = 0;
+    } else {
+        user_id++;
+    }
+
     players.push(user_id);
 
     const session = new GameSession();
@@ -53,7 +61,7 @@ app.get('/sessions', (_, res) => {
 });
 
 
-app.post('/play',jsonParser, (req, res) => {
+app.post('/play', jsonParser, (req, res) => {
     const answer: Answer = req.body, fizz: boolean = current_index % 3 == 0, buzz: boolean = current_index % 5 == 0;
 
     res.setHeader('Content-Type', 'application/json');
@@ -106,10 +114,12 @@ app.post('/play',jsonParser, (req, res) => {
 
         // Start time countdown for next player
         // Increased time limit to 10 seconds to take care of latency
-        setTimeout(()=>{
-            players.splice(players.indexOf(next_player),1);
-            ejected_players.push(next_player);
-        },10000);
+        if (next_player != null) {
+            setTimeout(() => {
+                players.splice(players.indexOf(next_player), 1);
+                ejected_players.push(next_player);
+            }, 10000);
+        }
     }
 });
 
