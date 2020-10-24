@@ -20,7 +20,7 @@ class GameSession {
 const players: Array<number> = [];
 const ejected_players: Array<number> = [];
 let next_player: number = null;
-let last_added_user: number = null;
+let last_added_user: number = 0;
 
 // Game sessions
 const sessions: Array<GameSession> = [];
@@ -34,7 +34,7 @@ let current_index = 0;
  */
 app.get('/join', (_, res) => {
 
-    let user_id = last_added_user++;
+    let user_id = last_added_user+1;
 
     players.push(user_id);
     last_added_user = user_id;
