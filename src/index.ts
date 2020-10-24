@@ -20,6 +20,7 @@ class GameSession {
 // Players
 const players: Array<number> = [];
 const ejected_players: Array<number> = [];
+const active_players: Array<number> = [];
 let next_player: number = null;
 let last_added_user: number = 0;
 
@@ -41,6 +42,7 @@ app.get('/join', (_, res) => {
     let user_id = last_added_user + 1;
 
     players.push(user_id);
+    active_players.push(user_id);
     last_added_user = user_id;
 
     const session = new GameSession();
@@ -70,10 +72,11 @@ app.post('/play', jsonParser, (req, res) => {
         res.status(400).send(JSON.stringify({
             message: "Already Ejected"
         }));
+        generateNextPlayer(answer.id);
         return;
     }
     // If less than 2 players
-    if (players.length <= 1) {
+    if (active_players.length <= 1) {
         res.status(400).send(JSON.stringify({
             message: "Wait for more players to join"
         }));
@@ -96,7 +99,7 @@ app.post('/play', jsonParser, (req, res) => {
     // TODO: If user fails to guess, do they continue playing or get ejected
     else {
         session.state = "Ejected";
-        players.splice(players.indexOf(answer.id), 1);
+        active_players.splice(active_players.indexOf(answer.id), 1);
         ejected_players.push(answer.id);
     }
     current_index++;
@@ -108,7 +111,7 @@ app.post('/play', jsonParser, (req, res) => {
         clearTimeout(timer);
     }
 
-    if (players.length >= 2) {
+    if (active_players.length >= 2) {
         // Get next player for 4 second rule
         generateNextPlayer(answer.id);
         console.log(next_player);
@@ -116,7 +119,7 @@ app.post('/play', jsonParser, (req, res) => {
         // Increased time limit to 10 seconds to take care of latency
         if (next_player != null) {
             timer = setTimeout(() => {
-                players.splice(players.indexOf(next_player), 1);
+                active_players.splice(active_players.indexOf(next_player), 1);
                 ejected_players.push(next_player);
 
                 const session = new GameSession();
@@ -140,13 +143,25 @@ app.listen(port, () => console.log(`Running on port ${port}`));
  * @param id - Current user id
  */
 function generateNextPlayer(id: number) {
-    if (players.length >= 2) {
+    if (active_players.length >= 2) {
         // Get next player for 4 second rule
         const user_index = players.indexOf(id);
         if (user_index > -1) {
             // If last user skip to first
-            let i = user_index + 1 == players.length ? 0 : user_index + 1;
-            next_player = players[i];
+            let i = user_index +1;
+
+            for(let j=1;j<=players.length;j++){
+                if(i == players.length){
+                    i = 0;
+                }
+
+                next_player = players[i];
+                if(!ejected_players.includes(next_player)){
+                    break;
+                }
+                i++;
+            }
         }
+
     }
 }
