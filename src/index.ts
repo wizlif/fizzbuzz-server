@@ -110,12 +110,7 @@ app.post('/play', jsonParser, (req, res) => {
 
     if (players.length >= 2) {
         // Get next player for 4 second rule
-        const user_index = players.indexOf(answer.id);
-        if (user_index > -1) {
-            // If last user skip to first
-            let i = user_index + 1 == players.length ? 0 : user_index + 1;
-            next_player = players[i];
-        }
+        generateNextPlayer(answer.id);
         console.log(next_player);
         // Start time countdown for next player
         // Increased time limit to 10 seconds to take care of latency
@@ -123,6 +118,14 @@ app.post('/play', jsonParser, (req, res) => {
             timer = setTimeout(() => {
                 players.splice(players.indexOf(next_player), 1);
                 ejected_players.push(next_player);
+
+                const session = new GameSession();
+                session.username = next_player;
+                session.state = "Ejected";
+                sessions.push(session);
+
+                // Get the next player if one is ejected
+                generateNextPlayer(next_player);
             }, 10000);
         }
     }
@@ -130,3 +133,20 @@ app.post('/play', jsonParser, (req, res) => {
 
 
 app.listen(port, () => console.log(`Running on port ${port}`));
+
+// Get next player
+/**
+ *
+ * @param id - Current user id
+ */
+function generateNextPlayer(id: number) {
+    if (players.length >= 2) {
+        // Get next player for 4 second rule
+        const user_index = players.indexOf(id);
+        if (user_index > -1) {
+            // If last user skip to first
+            let i = user_index + 1 == players.length ? 0 : user_index + 1;
+            next_player = players[i];
+        }
+    }
+}
