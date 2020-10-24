@@ -42,6 +42,7 @@ app.get('/join', (_, res) => {
     }
 
     players.push(user_id);
+    last_added_user = user_id;
 
     const session = new GameSession();
     session.username = user_id;
