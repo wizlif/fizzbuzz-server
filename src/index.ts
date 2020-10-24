@@ -1,5 +1,6 @@
 import express from 'express'
 import bodyParser from "body-parser";
+import Timeout = NodeJS.Timeout;
 
 const app = express();
 const jsonParser = bodyParser.json();
@@ -26,7 +27,10 @@ let last_added_user: number = 0;
 const sessions: Array<GameSession> = [];
 
 // Start point
-let current_index = 0;
+let current_index = 1;
+
+// Timer
+let timer: Timeout = null;
 
 /**
  * Join game session -
@@ -34,7 +38,7 @@ let current_index = 0;
  */
 app.get('/join', (_, res) => {
 
-    let user_id = last_added_user+1;
+    let user_id = last_added_user + 1;
 
     players.push(user_id);
     last_added_user = user_id;
@@ -99,6 +103,11 @@ app.post('/play', jsonParser, (req, res) => {
     sessions.push(session);
     res.status(200).send(JSON.stringify(session));
 
+    // Reset Timeout
+    if (timer != null) {
+        clearTimeout(timer);
+    }
+
     if (players.length >= 2) {
         // Get next player for 4 second rule
         const user_index = players.indexOf(answer.id);
@@ -107,11 +116,11 @@ app.post('/play', jsonParser, (req, res) => {
             let i = user_index + 1 == players.length ? 0 : user_index + 1;
             next_player = players[i];
         }
-
+        console.log(next_player);
         // Start time countdown for next player
         // Increased time limit to 10 seconds to take care of latency
         if (next_player != null) {
-            setTimeout(() => {
+            timer = setTimeout(() => {
                 players.splice(players.indexOf(next_player), 1);
                 ejected_players.push(next_player);
             }, 10000);
